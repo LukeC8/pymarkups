@@ -155,9 +155,9 @@ class MarkdownTest(unittest.TestCase):
 		self.assertIsNone(markup._canonicalize_extension_name('nonexistent(someoption)'))
 		self.assertIsNone(markup._canonicalize_extension_name('.foobar'))
 		self.assertEqual(markup._canonicalize_extension_name('meta'), 'markdown.extensions.meta')
-		name, parameters = markup._split_extension_config('toc(anchorlink=1, foo=bar)')
+		name, parameters = markup._split_extension_config('toc(anchorlink=True)')
 		self.assertEqual(name, 'toc')
-		self.assertEqual(parameters, {'anchorlink': '1', 'foo': 'bar'})
+		self.assertEqual(parameters, {'anchorlink': True})
 
 	def test_loading_extensions_by_module_name(self):
 		markup = MarkdownMarkup(extensions=['markdown.extensions.footnotes'])
@@ -185,7 +185,7 @@ class MarkdownTest(unittest.TestCase):
 		html = markup.convert(toc_header + '## Header').get_document_body()
 		self.assertEqual(html, toc_header +
 			'<h2 id="header"><a class="toclink" href="#header">Header</a></h2>\n')
-		toc_header = '<!--- Required extensions: toc(title=Table of contents, baselevel=3) wikilinks --->\n\n'
+		toc_header = '<!--- Required extensions: toc(title="Table of contents", baselevel=3) wikilinks --->\n\n'
 		html = markup.convert(toc_header + '[TOC]\n\n# Header\n[[Link]]').get_document_body()
 		self.assertEqual(html, toc_header +
 			'<div class="toc"><span class="toctitle">Table of contents</span><ul>\n'
@@ -294,7 +294,7 @@ class MarkdownTest(unittest.TestCase):
 		self.assertIn('<div class="codehilite">', body)
 
 	def test_codehilite_custom_class(self):
-		markup = MarkdownMarkup(extensions=["codehilite(css_class=myclass)"])
+		markup = MarkdownMarkup(extensions=['codehilite(css_class="myclass")'])
 		converted = markup.convert('    :::python\n    import foo')
 		stylesheet = converted.get_stylesheet()
 		self.assertIn(".myclass .k {", stylesheet)
@@ -312,7 +312,7 @@ class MarkdownTest(unittest.TestCase):
 
 	@unittest.skipIf(pymdownx is None, "pymdownx module is not available")
 	def test_pymdownx_highlight_custom_class(self):
-		markup = MarkdownMarkup(extensions=["pymdownx.highlight(css_class=myclass)"])
+		markup = MarkdownMarkup(extensions=['pymdownx.highlight(css_class="myclass")'])
 		converted = markup.convert('    import foo')
 		stylesheet = converted.get_stylesheet()
 		self.assertIn(".myclass .k {", stylesheet)

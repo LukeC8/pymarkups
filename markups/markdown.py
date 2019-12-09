@@ -8,6 +8,7 @@ from __future__ import absolute_import
 
 import importlib
 import os
+import ast
 import re
 import warnings
 import markups.common as common
@@ -98,12 +99,26 @@ class MarkdownMarkup(AbstractMarkup):
 
 	def _split_extension_config(self, extension_name):
 		"""Splits the configuration options from the extension name."""
-		lb = extension_name.find('(')
-		if lb == -1:
+		def _aux_(node):
+			while not hasattr(node, 'id'):
+				yield node.attr
+				node = node.value
+			yield node.id
+
+		expression = ast.parse(extension_name).body[0].value
+		
+		solve_name = lambda exp: ".".join(reversed(list(_aux_(exp))))
+
+		if not isinstance(expression, ast.Call):
+			extension_name = solve_name(expression)
 			return extension_name, {}
-		extension_name, parameters = extension_name[:lb], extension_name[lb + 1:-1]
-		pairs = [x.split("=") for x in parameters.split(",")]
-		return extension_name, {x.strip(): y.strip() for (x, y) in pairs}
+
+		extension_name = solve_name(expression.func)
+		
+		kwargs = {arg.arg: ast.literal_eval(arg.value) for arg in expression.keywords}
+
+		return extension_name, kwargs
+
 
 	def _apply_extensions(self):
 		extensions = (self.requested_extensions +
